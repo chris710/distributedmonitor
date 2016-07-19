@@ -18,7 +18,7 @@ class CommunicationManager:
         if self.initialized:
             self.initialized = False
             MPI.COMM_WORLD.Barrier()
-            self.log("TRACE","Last barrier before shutdown.")
+            self.log("TRACE", "Last barrier before shutdown.")
             MPI.Finalize()
 
     def log(self, level, text):
@@ -37,8 +37,8 @@ class CommunicationManager:
             self.clock += 1
             msg.senderId = self.processId
             msg.clock = self.clock
-            self.log("TRACE", "Sending message "+str(msg.type)+" to "+str(msg.recipientId)+" (size = "+str(msg.dataSize)+
-                     ", clock = "+str(msg.clock)+")")
+            self.log("TRACE", "Sending message "+str(msg.type)+" to "+str(msg.recipientId)+" (size = "+str(msg.dataSize)
+                     +", clock = "+str(msg.clock)+")")
             MPI.COMM_WORLD.isend(msg.get_array, dest=msg.recipientId, tag=0)
         communicationMutex.unlock()
 

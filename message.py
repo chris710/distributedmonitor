@@ -5,7 +5,7 @@ dataTransferObject = namedtuple("messageHeader", "clock senderId recipientId typ
 
 
 class Message:
-    def __init__(self, msg):
+    def __init__(self, msg=None):
         self.clock = msg.clock
         self.senderId = msg.senderId
         self.recipientId = msg.recipientId
