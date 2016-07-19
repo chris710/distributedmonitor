@@ -14,12 +14,12 @@ class Mutex:
         self.requesting = False     # mutex waiting for CS
         self.locked = False
         self.requestClock = 0       # timestamp to reject overdue AGREEs
-        self.agreeVector = dict()   # list of received AGREEs (boolean)
+        self.agreeVector = None   # list of received AGREEs (boolean)
         self.heldUpRequests = []    # AGREEs to be sent after unlock
         self.operationMutex = Lock()    # local mutex for blocking communication loop
         self.localMutex = Lock()        # local mutex for thread safe behavior
         self.previousReturn = None  # most recent RETURN msg
-        self.keepAlive = False      #
+        self.keepAlive = False      # no one is requesting
         self.criticalSectionCondition = Condition()     # for waiting till all AGREEs are collected
         self.criticalSectionMutex = Lock()
 
@@ -69,9 +69,9 @@ class Mutex:
     def agree_vector_true(self):
         if self.agreeVector is not None:
             return False
-        for key, bool in self.agreeVector:      # TODO sprawdz czy zawsze dziala
         # for i in range(0, len(self.agreeVector)):
-            if bool != True:
+        for key, boolean in self.agreeVector:      # TODO sprawdz czy zawsze dziala
+            if boolean != True:
                 return False
         return True
 
