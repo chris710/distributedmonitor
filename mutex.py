@@ -1,5 +1,7 @@
+from threading import Lock
+
 existingMutexes = dict()
-mutexListMutex = Mutex(0)
+mutexListMutex = Lock()
 
 class Mutex:
 

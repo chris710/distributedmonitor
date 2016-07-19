@@ -34,4 +34,3 @@ class Message:
     def __gt__(self, other):
         return self.compare(self, other)
 
-
