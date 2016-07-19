@@ -6,14 +6,14 @@ dataTransferObject = namedtuple("messageHeader", "clock senderId recipientId typ
 
 class Message:
     def __init__(self, msg=None):
-        self.clock = msg.clock
-        self.senderId = msg.senderId
-        self.recipientId = msg.recipientId
-        self.type = msg.type
-        self.referenceId = msg.referenceId
-        self.hasData = msg.hasData
-        self.dataSize = msg.dataSize
-        self.data = msg.data
+        self.clock = msg.clock              # zegar logiczny
+        self.senderId = msg.senderId        # nadawca
+        self.recipientId = msg.recipientId  # adresat
+        self.type = msg.type                # rodzaj wiadomosci (START, REQUEST, AGREE, QUIT, RETURN , REQUEST_DATA, DATA)
+        self.referenceId = msg.referenceId  # numer odpowiadajacego mutexa
+        self.hasData = msg.hasData          # czy zawiera jakies dane w data
+        self.dataSize = msg.dataSize        # wielkosc danych
+        self.data = msg.data                # dane
 
     def get_array(self):
         m = dataTransferObject(clock=self.clock,

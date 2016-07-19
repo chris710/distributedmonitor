@@ -19,7 +19,8 @@ class ConditionVariable:
         existingConditionVariables[self.id] = self
         conditionListMutex.unlock()
 
-    def get_condition_variable(self, idn):
+    @staticmethod
+    def get_condition_variable(idn):
         conditionListMutex.lock()
         for key, var in existingConditionVariables.items():
             if key == idn:
