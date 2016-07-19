@@ -20,7 +20,7 @@ class Mutex:
         existingMutexes[self.id] = self
         mutexListMutex.unlock()
 
-    def getMutex(self, id):
+    def get_mutex(self, id):
         mutexListMutex.lock()
         for key, mutex in existingMutexes.items():
             if key == id:
