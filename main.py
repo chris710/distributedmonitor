@@ -13,7 +13,7 @@ import time
 m = Mutex(1)
 cv = ConditionVariable(1)
 monitor = Monitor()
-if monitor.communicationManager.processId > 0:
+if monitor.communicationManager.processId > 0:      # ten proces symuluje czekanie
     monitor.lock(m)
     monitor.wait(cv, m)
     monitor.log("Stopped waiting, going to sleep for 2s")

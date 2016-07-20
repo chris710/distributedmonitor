@@ -8,7 +8,7 @@ communicationMutex = Lock()
 class CommunicationManager:
     def __init__(self):
         self.processName = MPI.Get_processor_name()
-        # MPI.Init_thread(MPI.THREAD_MULTIPLE)
+        # MPI.Init_thread(MPI.THREAD_MULTIPLE)  # wtf
         self.processId = MPI.COMM_WORLD.Get_rank()
         self.processCount = MPI.COMM_WORLD.Get_size()
         self.initialized = True
@@ -23,7 +23,7 @@ class CommunicationManager:
             MPI.Finalize()
 
     def log(self, level, text):
-        # if level != "TRACE":
+        if level != "TRACE":
             message = ""
             if self.processName is not None:
                 message = "["+str(self.processName)+" "+str(self.processId)+" ; clock = "+str(self.clock)+" "+"] "

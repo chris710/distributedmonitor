@@ -21,7 +21,6 @@ class Mutex:
         self.previousReturn = None  # most recent RETURN msg
         self.keepAlive = False      # no one is requesting
         self.criticalSectionCondition = Condition()     # for waiting till all AGREEs are collected
-        # self.criticalSectionConditionMutex = Lock()  # not needed as condition object already has mutex
 
         mutexListMutex.acquire()
         existingMutexes[self.id] = self
@@ -67,11 +66,7 @@ class Mutex:
         return listOfMutexes
 
     def agree_vector_true(self):
-        if self.agreeVector is not None:
+        if self.agreeVector is None:
             return False
-        # for i in range(0, len(self.agreeVector)):
-        for key, boolean in self.agreeVector:      # TODO sprawdz czy zawsze dziala
-            if boolean != True:
-                return False
-        return True
+        return all(i is True for i in self.agreeVector)
 

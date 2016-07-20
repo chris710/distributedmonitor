@@ -2,7 +2,6 @@ from message import Message
 from communicationmanager import CommunicationManager
 from mutex import Mutex
 from conditionvariable import ConditionVariable
-from threading import Lock
 from threading import Thread
 
 
@@ -11,9 +10,7 @@ class Monitor:
         self.quitMessages = 0
         self.communicationManager = CommunicationManager()
         self.log("TRACE", "Monitor created")
-        # self.init(0)
         self.log("TRACE", "Monitor initializing...")
-        # self.communicationManager.init
         self.communicationThread = Thread(target=self.communication_loop)
         self.communicationThread.start()
         self.log("TRACE", "Monitor: Communication loop started.")
@@ -22,7 +19,6 @@ class Monitor:
     def log(self, level, text):
         self.communicationManager.log(level, text)
 
-    # def init(self):
 
     def finalize(self):
         q = Message()
@@ -41,7 +37,7 @@ class Monitor:
         if mux is None:
             return
         mux.operationMutex.acquire()
-        if mux.requesting and mux.agreeVectorTrue():    # conditions to enter CS
+        if mux.requesting and mux.agree_vector_true():    # conditions to enter CS
             if mux.previousReturn is None:          # first time entering CS
                 mux.requesting = False
                 mux.agreeVector = [False]*(len(mux.agreeVector))
@@ -85,7 +81,7 @@ class Monitor:
         if mux.agreeVector is not None:     # reset agreeVector
             del mux.agreeVector
         self.communicationManager.get_communication_mutex().acquire()
-        mux.agreeVector = dict()
+        mux.agreeVector = [False]*self.communicationManager.processCount      # agree vector init
         for i in range(0, self.communicationManager.processCount):
             mux.agreeVector[i] = (i == self.communicationManager.processId)     # set every entry to false except requesting process
         self.communicationManager.get_communication_mutex().release()
@@ -132,7 +128,7 @@ class Monitor:
         mux.localMutex.release()
 
     def wait(self, cv, mux):
-        cv.operationMutex.acquire()
+        cv.conditionVariable.acquire()
         cv.waiting = True
         retmes = Message()
         retmes.referenceId = cv.id
@@ -141,8 +137,8 @@ class Monitor:
         self.log("INFO", "("+str(cv.id)+")"+"Waiting...")
         while cv.waiting:
             self.unlock(mux)
-            cv.cv.wait()
-            cv.operationMutex.release()
+            cv.conditionVariable.wait()
+            cv.conditionVariable.release()
             self.log("INFO", "("+str(cv.id)+") Reaquiring lock...")
             self.lock(mux)
         self.log("INFO", "("+str(cv.id)+") Received signal")
@@ -152,23 +148,24 @@ class Monitor:
         self.communicationManager.send_broadcast(retmes)
 
     def signal_all(self, cv):
-        cv.operationMutex.acquire()
+        cv.conditionVariable.acquire()
         sigmes = Message()
         sigmes.referenceId = cv.id
         sigmes.type = "SIGNAL"
         for proc in cv.waitingProcesses:
             sigmes.recipientId = proc
             self.communicationManager.send_message(sigmes)
-        cv.operationMutex.release()
+        cv.conditionVariable.release()
 
     def signal(self, cv):
-        cv.operationMutex.acquire()
+        cv.conditionVariable.acquire()
         sigmes = Message()
         sigmes.referenceId = cv.id
         sigmes.type = "SIGNAL"
         if len(cv.waitingProcesses) >0:
             sigmes.recipientId = cv.waitingProcesses[0]
             self.communicationManager.send_message(sigmes)
+        cv.conditionVariable.release()
 
     def communication_loop(self):
         while True:
@@ -204,11 +201,11 @@ class Monitor:
                             agreeReply.recipientId = msg.senderId
                             if mux.keepAlive:
                                 agreeReply.type = "RETURN"
-                                if mux.getDataSize() > 0:
+                                if mux.get_data_size() > 0:
                                     agreeReply.hasData = True
-                                else:
-                                    agreeReply.type = "AGREE"
-                                self.communicationManager.send_message(agreeReply)
+                            else:
+                                agreeReply.type = "AGREE"
+                            self.communicationManager.send_message(agreeReply)
                         else:
                             mux.heldUpRequests.append(msg.senderId)
                     mux.operationMutex.release()
@@ -245,28 +242,28 @@ class Monitor:
                 mux = Mutex.get_mutex(msg.referenceId)
                 mux.operationMutex.acquire()
                 if mux is not None and mux.requesting:
-                    mux.senderVector[msg.senderId] = True       # sender agreed
-                    mux.keepAlive = False;
+                    mux.agreeVector[msg.senderId] = True       # sender agreed
+                    mux.keepAlive = False                      # sb tries to acquire CS
                     mux.operationMutex.release()
                     self.enter_critical_section(mux)       # try to enter CS
                 else:
                     mux.operationMutex.release()
             elif msg.type == "WAIT":        # process is waiting
                 cv = ConditionVariable.get_condition_variable(msg.referenceId)
-                cv.operationMutex.acquire()
+                cv.conditionVariable.acquire()
                 cv.waitingProcesses.append(msg.senderId)
-                cv.operationMutex.release()
+                cv.conditionVariable.release()
             elif msg.type == "WAIT_RETURN":     # process is not waiting anymore
                 cv = ConditionVariable.get_condition_variable(msg.referenceId)
-                cv.operationMutex.acquire()
+                cv.conditionVariable.acquire()
                 cv.waitingProcesses.remove(msg.senderId)
-                cv.operationMutex.release()
+                cv.conditionVariable.release()
             elif msg.type == "SIGNAL":          # wake up waiting process
                 cv = ConditionVariable.get_condition_variable(msg.referenceId)
-                cv.operationMutex.acquire()
+                cv.conditionVariable.acquire()
                 cv.waiting = False
                 cv.conditionVariable.notify()
-                cv.operationMutex.release()
+                cv.condidtionVariable.release()
             elif msg.type == "QUIT":            # process will no longer communicate
                 self.quitMessages += 1
                 if self.quitMessages == self.communicationManager.processCount:

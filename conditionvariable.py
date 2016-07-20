@@ -12,7 +12,6 @@ class ConditionVariable:
         self.id = idn
         self.waiting = False
         self.waitingProcesses = []          # list of processes
-        self.operationMutex = Lock()
         self.conditionVariable = Condition()
 
         conditionListMutex.acquire()
