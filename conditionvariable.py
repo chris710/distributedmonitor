@@ -7,7 +7,7 @@ conditionListMutex = Lock()
 
 class ConditionVariable:
     def __init__(self, idn):
-        if self.getConditionVariable(idn) is not None:
+        if self.get_condition_variable(idn) is not None:
             raise Exception("Condition variable already exists")
         self.id = idn
         self.waiting = False
@@ -15,22 +15,22 @@ class ConditionVariable:
         self.operationMutex = Lock()
         self.conditionVariable = Condition()
 
-        conditionListMutex.lock()
+        conditionListMutex.acquire()
         existingConditionVariables[self.id] = self
-        conditionListMutex.unlock()
+        conditionListMutex.release()
 
     @staticmethod
     def get_condition_variable(idn):
-        conditionListMutex.lock()
+        conditionListMutex.acquire()
         for key, var in existingConditionVariables.items():
             if key == idn:
-                conditionListMutex.unlock()
+                conditionListMutex.release()
                 return var
-        conditionListMutex.unlock()
+        conditionListMutex.release()
         return None
 
     def get_condition_variables(self):
-        conditionListMutex.lock()
+        conditionListMutex.acquire()
         listOfCV = []
         for key, var in existingConditionVariables.items():
             listOfCV.append(var)

@@ -21,20 +21,20 @@ class Mutex:
         self.previousReturn = None  # most recent RETURN msg
         self.keepAlive = False      # no one is requesting
         self.criticalSectionCondition = Condition()     # for waiting till all AGREEs are collected
-        self.criticalSectionMutex = Lock()
+        # self.criticalSectionConditionMutex = Lock()  # not needed as condition object already has mutex
 
-        mutexListMutex.lock()
+        mutexListMutex.acquire()
         existingMutexes[self.id] = self
-        mutexListMutex.unlock()
+        mutexListMutex.release()
 
     @staticmethod
     def get_mutex(idn):
-        mutexListMutex.lock()
+        mutexListMutex.acquire()
         for key, mutex in existingMutexes.items():
             if key == idn:
-                mutexListMutex.unlock()
+                mutexListMutex.release()
                 return mutex
-        mutexListMutex.unlock()
+        mutexListMutex.release()
         return None
 
     def get_data(self):
@@ -59,11 +59,11 @@ class Mutex:
         self.previousReturn = m
 
     def get_mutexes(self):
-        mutexListMutex.lock()
+        mutexListMutex.acquire()
         listOfMutexes = []
         for key, mutex in existingMutexes.items():
             listOfMutexes.append(mutex)
-        mutexListMutex.unlock()
+        mutexListMutex.release()
         return listOfMutexes
 
     def agree_vector_true(self):

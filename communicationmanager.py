@@ -8,10 +8,11 @@ communicationMutex = Lock()
 class CommunicationManager:
     def __init__(self):
         self.processName = MPI.Get_processor_name()
-        MPI.Init_thread(MPI.THREAD_MULTIPLE)
+        # MPI.Init_thread(MPI.THREAD_MULTIPLE)
         self.processId = MPI.COMM_WORLD.Get_rank()
         self.processCount = MPI.COMM_WORLD.Get_size()
         self.initialized = True
+        self.communicationMutex = Lock()
         self.clock = 0
 
     def close(self):
@@ -32,31 +33,32 @@ class CommunicationManager:
     def send_message(self, msg):
         if not self.initialized:
             return
-        communicationMutex.lock()
+        communicationMutex.acquire()
         if msg is not None:
             self.clock += 1
             msg.senderId = self.processId
             msg.clock = self.clock
-            self.log("TRACE", "Sending message "+str(msg.type)+" to "+str(msg.recipientId)+" (size = "+str(msg.dataSize)
-                     +", clock = "+str(msg.clock)+")")
-            MPI.COMM_WORLD.isend(msg.get_array, dest=msg.recipientId, tag=0)
-        communicationMutex.unlock()
+            self.log("TRACE", "Sending message "+str(msg.type)+" to "+str(msg.recipientId)+" (size = "+str(msg.dataSize) +
+                    ", clock = " + str(msg.clock)+")")
+            MPI.COMM_WORLD.isend(msg.get_array(), dest=msg.recipientId, tag=0)
+        communicationMutex.release()
 
     def send_broadcast(self, msg):
         if not self.initialized and msg is not None:
             return
-        communicationMutex.lock()
+        communicationMutex.acquire()
         self.clock += 1
         msg.clock = self.clock
         msg.senderId = self.processId
-        for i in range(0, self.processCount):
+        for i in range(0, self.processCount+1):
             msg.recipientId = i
             if msg.recipientId == self.processId:
                 continue
             self.log("TRACE", "Sending message " + str(msg.type) + " to " + str(msg.recipientId) +
                     " (size = " + str(msg.dataSize) + ", clock = " + str(msg.clock) + " )")
-            MPI.COMM_WORLD.isend(msg.get_array, dest=msg.recipientId, tag=0)
-        communicationMutex.unlock()
+            print(msg.recipientId)
+            MPI.COMM_WORLD.isend(msg.get_array(), dest=msg.recipientId, tag=0)
+        communicationMutex.release()
 
     def wait_for_message(self):
         if not self.initialized:
@@ -67,13 +69,13 @@ class CommunicationManager:
     def recv_message(self):
         if not self.initialized:
             return
-        communicationMutex.lock()
+        communicationMutex.acquire()
         status = MPI.Status()
         MPI.COMM_WORLD.Probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
         packet = MPI.COMM_WORLD.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG)
         msg = Message(packet)
         self.clock = max(self.clock, msg.clock+1)
-        communicationMutex.unlock()
+        communicationMutex.release()
         self.log("TRACE", "Received: " + str(msg.type) + " from " + str(msg.senderId) + " (size = " +
                    str(msg.dataSize) + ", clock = " + str(msg.clock) + " )")
         return msg
