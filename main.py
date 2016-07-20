@@ -25,5 +25,5 @@ else:
     monitor.lock(m)
     monitor.signal(cv)
     monitor.unlock(m)
-
+print("Finished")
 monitor.finalize()

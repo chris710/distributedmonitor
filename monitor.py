@@ -15,6 +15,7 @@ class Monitor:
         self.log("TRACE", "Monitor initializing...")
         # self.communicationManager.init
         self.communicationThread = Thread(target=self.communication_loop)
+        self.communicationThread.start()
         self.log("TRACE", "Monitor: Communication loop started.")
         self.log("INFO", "Monitor initialized. ")
 

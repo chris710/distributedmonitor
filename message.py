@@ -16,14 +16,14 @@ class Message:
             self.dataSize = 0        # wielkosc danych
             self.data = None
         else:
-            self.clock = msg.clock or 0             # zegar logiczny
-            self.senderId = msg.senderId or 0       # nadawca
-            self.recipientId = msg.recipientId or 0  # adresat
-            self.type = msg.type or ""              # rodzaj wiadomosci (START, REQUEST, AGREE, QUIT, RETURN , REQUEST_DATA, DATA)
-            self.referenceId = msg.referenceId or 0  # numer odpowiadajacego mutexa
-            self.hasData = msg.hasData or False         # czy zawiera jakies dane w data
-            self.dataSize = msg.dataSize or 0        # wielkosc danych
-            self.data = msg.data                # dane
+            self.clock = msg['clock']
+            self.senderId = msg['senderId']
+            self.recipientId = msg['recipientId']
+            self.type = msg['type']
+            self.referenceId = msg['referenceId']
+            self.hasData = msg['hasData']
+            self.dataSize = msg['dataSize']
+            self.data = msg['data']
 
     def get_array(self):
         m = {'clock':self.clock,

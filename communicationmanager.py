@@ -23,7 +23,7 @@ class CommunicationManager:
             MPI.Finalize()
 
     def log(self, level, text):
-        if level != "TRACE":
+        # if level != "TRACE":
             message = ""
             if self.processName is not None:
                 message = "["+str(self.processName)+" "+str(self.processId)+" ; clock = "+str(self.clock)+" "+"] "
@@ -50,13 +50,12 @@ class CommunicationManager:
         self.clock += 1
         msg.clock = self.clock
         msg.senderId = self.processId
-        for i in range(0, self.processCount+1):
+        for i in range(0, self.processCount):
             msg.recipientId = i
             if msg.recipientId == self.processId:
                 continue
             self.log("TRACE", "Sending message " + str(msg.type) + " to " + str(msg.recipientId) +
                     " (size = " + str(msg.dataSize) + ", clock = " + str(msg.clock) + " )")
-            print(msg.recipientId)
             MPI.COMM_WORLD.isend(msg.get_array(), dest=msg.recipientId, tag=0)
         communicationMutex.release()
 
