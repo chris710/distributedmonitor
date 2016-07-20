@@ -132,7 +132,42 @@ class Monitor:
 
     def wait(self, cv, mux):
         cv.operationMutex.lock()
+        cv.waiting = True
+        retmes = Message()
+        retmes.referenceId = cv.id
+        retmes.type = "WAIT"
+        self.communicationManager.send_broadcast(retmes)
+        self.log("INFO", "("+str(cv.id)+")"+"Waiting...")
+        while cv.waiting:
+            self.unlock(mux)
+            cv.cv.wait()
+            cv.operationMutex.unlock()
+            self.log("INFO", "("+str(cv.id)+") Reaquiring lock...")
+            self.lock(mux)
+        self.log("INFO", "("+str(cv.id)+") Received signal")
+        retmes = Message()
+        retmes.referenceId = cv.id
+        retmes.type = "WAIT_RETURN"
+        self.communicationManager.send_broadcast(retmes)
 
+    def signal_all(self, cv):
+        cv.operationMutex.lock()
+        sigmes = Message()
+        sigmes.referenceId = cv.id
+        sigmes.type = "SIGNAL"
+        for proc in cv.waitingProcesses:
+            sigmes.recipientId = proc
+            self.communicationManager.send_message(sigmes)
+        cv.operationMutex.unlock()
+
+    def signal(self, cv):
+        cv.operationMutex.lock()
+        sigmes = Message()
+        sigmes.referenceId = cv.id
+        sigmes.type = "SIGNAL"
+        if len(cv.waitingProcesses) >0:
+            sigmes.recipientId = cv.waitingProcesses[0]
+            self.communicationManager.send_message(sigmes)
 
     def communication_loop(self):
         while True:
