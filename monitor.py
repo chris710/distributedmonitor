@@ -49,21 +49,13 @@ class Monitor:
                 return
             else:
                 if mux.previousReturn.type == "RETURN":
-                    if mux.previousReturn.hasData:  # ask for data from previous process that entered
+                    '''if mux.previousReturn.hasData:  # ask for data from previous process that entered
                         reqdata = Message()
                         reqdata.type = "REQUEST_DATA"
                         reqdata.recipientId = mux.previousReturn.senderId
                         reqdata.referenceID = mux.previousReturn.referenceId
                         self.communicationManager.send_message(reqdata)
-                    else:
-                        mux.requesting = False
-                        mux.agreeVector = [False]*(len(mux.agreeVector))
-                        mux.criticalSectionCondition.acquire()
-                        mux.criticalSectionCondition.notify()
-                        mux.criticalSectionCondition.release()
-                        mux.operationMutex.release()
-                        return
-                if mux.previousReturn.type == "DATA":
+                    else:'''
                     mux.requesting = False
                     mux.agreeVector = [False]*(len(mux.agreeVector))
                     mux.criticalSectionCondition.acquire()
@@ -71,6 +63,14 @@ class Monitor:
                     mux.criticalSectionCondition.release()
                     mux.operationMutex.release()
                     return
+                '''if mux.previousReturn.type == "DATA":
+                    mux.requesting = False
+                    mux.agreeVector = [False]*(len(mux.agreeVector))
+                    mux.criticalSectionCondition.acquire()
+                    mux.criticalSectionCondition.notify()
+                    mux.criticalSectionCondition.release()
+                    mux.operationMutex.release()
+                    return'''
         mux.operationMutex.release()
 
     # try to enter CS
@@ -107,9 +107,9 @@ class Monitor:
         retmes = Message()
         retmes.type = "RETURN"
         retmes.referenceId = mux.id
-        retmes.hasData = False
-        if mux.previousReturn is not None:
-            retmes.hasData = mux.previousReturn.hasData
+        #retmes.hasData = False
+        #if mux.previousReturn is not None:
+        #    retmes.hasData = mux.previousReturn.hasData
         if len(mux.heldUpRequests) == 0:
             mux.keepAlive = True    # respond with RETURN instead of AGREE (after CS)
         for proc in mux.heldUpRequests:
@@ -202,8 +202,8 @@ class Monitor:
                             agreeReply.recipientId = msg.senderId
                             if mux.keepAlive:
                                 agreeReply.type = "RETURN"
-                                if mux.get_data_size() > 0:
-                                    agreeReply.hasData = True
+                                #if mux.get_data_size() > 0:
+                                #    agreeReply.hasData = True
                             else:
                                 agreeReply.type = "AGREE"
                             self.communicationManager.send_message(agreeReply)
@@ -221,7 +221,7 @@ class Monitor:
                     mux.previousReturn = msg
                     mux.operationMutex.release()
                     self.enter_critical_section(mux)
-            elif msg.type == "REQUEST_DATA":    # when entering CS to get data from previous process
+                '''elif msg.type == "REQUEST_DATA":    # when entering CS to get data from previous process
                 mux = Mutex.get_mutex(msg.referenceId)
                 if mux is not None:
                     mux.operationMutex.acquire()
@@ -238,7 +238,7 @@ class Monitor:
                     mux.previousReturn = msg    # save message with data to mutex
                     msg = None
                     mux.operationMutex.release()
-                self.enter_critical_section(mux)
+                self.enter_critical_section(mux)'''
             elif msg.type == "AGREE":           # process agrees to request for CS
                 mux = Mutex.get_mutex(msg.referenceId)
                 mux.operationMutex.acquire()

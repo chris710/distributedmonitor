@@ -34,7 +34,7 @@ class Mutex:
                     return mutex
         return None
 
-    def get_data(self):
+    '''def get_data(self):
         if self.previousReturn is not None and self.previousReturn.hasData:
             return self.previousReturn.data
         return None
@@ -42,7 +42,7 @@ class Mutex:
     def get_data_size(self):
         if self.previousReturn is not None and self.previousReturn.hasData:
             return self.previousReturn.dataSize
-        return 0
+        return 0'''
 
     def set_data_for_return(self, data, size):
         if self.previousReturn is not None:
