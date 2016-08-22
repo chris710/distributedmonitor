@@ -3,8 +3,6 @@ from threading import Lock
 from mpi4py import MPI
 from time import sleep
 
-#communicationMutex = Lock()
-
 
 class CommunicationManager:
     def __init__(self):
@@ -24,7 +22,7 @@ class CommunicationManager:
             self.log("INFO", "Finished")
 
     def log(self, level, text):
-        if level != "TRACE":          # comment this line for detailed logging info
+        # if level != "TRACE":          # comment this line for detailed logging info
             message = ""
             if self.processName is not None:
                 message = "["+str(self.processName)+" "+str(self.processId)+" ; clock = "+str(self.clock)+" "+"] "
@@ -62,7 +60,6 @@ class CommunicationManager:
     def wait_for_message(self):
         if not self.initialized:
             return
-        #status = MPI.Status()
         MPI.COMM_WORLD.irecv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG)
         #while not MPI.COMM_WORLD.Iprobe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG):
             #sleep(0.05)
@@ -70,14 +67,9 @@ class CommunicationManager:
     def recv_message(self):
         if not self.initialized:
             return
-        #self.communicationMutex.acquire()
-        #with self.communicationMutex:
-            #status = MPI.Status()
-            #MPI.COMM_WORLD.Probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
         packet = MPI.COMM_WORLD.irecv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG)
         msg = Message(packet.wait())
         self.clock = max(self.clock, msg.clock+1)
-        #self.communicationMutex.release()
         self.log("TRACE", "Received: " + str(msg.type) + " from " + str(msg.senderId) +
                    ", clock = " + str(msg.clock) + " )")
         return msg

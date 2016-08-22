@@ -12,18 +12,12 @@ class Message:
             self.recipientId = 0  # adresat
             self.type = ""              # rodzaj wiadomosci (START, REQUEST, AGREE, QUIT, RETURN , REQUEST_DATA, DATA)
             self.referenceId = 0  # numer odpowiadajacego mutexa
-            #self.hasData = False         # czy zawiera jakies dane w data
-            #self.dataSize = 0        # wielkosc danych
-            #self.data = None
         else:
             self.clock = msg['clock']
             self.senderId = msg['senderId']
             self.recipientId = msg['recipientId']
             self.type = msg['type']
             self.referenceId = msg['referenceId']
-            #self.hasData = msg['hasData']
-            #self.dataSize = msg['dataSize']
-            #self.data = msg['data']
 
     def get_array(self):
         m = {'clock':self.clock,
@@ -31,9 +25,6 @@ class Message:
                                "recipientId":self.recipientId,
                                "type":self.type,
                                "referenceId":self.referenceId}
-                               #"hasData":self.hasData,
-                               #"dataSize":self.dataSize,
-                               #"data":self.data}
         return m
 
     def compare(self, a, b):

@@ -17,7 +17,6 @@ class Mutex:
         self.agreeVector = None   # list of received AGREEs (boolean)
         self.heldUpRequests = []    # AGREEs to be sent after unlock
         self.operationMutex = Lock()    # local mutex for blocking communication loop
-        #self.localMutex = Lock()        # local mutex for thread safe behavior
         self.previousReturn = None  # most recent RETURN msg
         self.keepAlive = False      # no one is requesting, so after CS bc RETURN rather than AGREE
         self.criticalSectionCondition = Condition()     # for waiting till all AGREEs are collected
@@ -30,19 +29,8 @@ class Mutex:
         with mutexListMutex:
             for key, mutex in existingMutexes.items():
                 if key == idn:
-                    #mutexListMutex.release()
                     return mutex
         return None
-
-    '''def get_data(self):
-        if self.previousReturn is not None and self.previousReturn.hasData:
-            return self.previousReturn.data
-        return None
-
-    def get_data_size(self):
-        if self.previousReturn is not None and self.previousReturn.hasData:
-            return self.previousReturn.dataSize
-        return 0'''
 
     def set_data_for_return(self, data, size):
         if self.previousReturn is not None:

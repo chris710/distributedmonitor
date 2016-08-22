@@ -22,7 +22,6 @@ class ConditionVariable:
         with conditionListMutex:
             for key, var in existingConditionVariables.items():
                 if key == idn:
-                    #conditionListMutex.release()
                     return var
         return None
 
