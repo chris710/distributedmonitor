@@ -9,17 +9,17 @@ class Monitor:
     def __init__(self):
         self.quitMessages = 0
         self.communicationManager = CommunicationManager()
-        self.log("TRACE", "Monitor created")
-        self.log("TRACE", "Monitor initializing...")
+        # self.log("TRACE", "Monitor created")
+        # self.log("TRACE", "Monitor initializing...")
         self.communicationThread = Thread(target=self.communication_loop)
         self.communicationThread.start()
-        self.log("TRACE", "Monitor: Communication loop started.")
+        # self.log("TRACE", "Monitor: Communication loop started.")
         self.log("INFO", "Monitor initialized. ")
 
     def log(self, level, text):
         self.communicationManager.log(level, text)
 
-
+    # konczy dzialanie monitora, oglasza to, laczy watki i czysci
     def finalize(self):
         q = Message()
         q.type = "QUIT"
@@ -32,6 +32,7 @@ class Monitor:
         self.log("TRACE", "Communication thread joined")
         self.communicationManager.close()
         self.log("TRACE", "MPI finalized")
+        self.log("INFO", "Monitor finalized")
 
     def enter_critical_section(self, mux):
         if mux is None:
@@ -74,17 +75,16 @@ class Monitor:
 
     # try to enter CS
     def lock(self, mux):
-        mux.localMutex.acquire()
         mux.operationMutex.acquire()
         mux.requesting = True       # set mux to wait for CS
         mux.keepAlive = False
         if mux.agreeVector is not None:     # reset agreeVector
             del mux.agreeVector
-        self.communicationManager.get_communication_mutex().acquire()
+        #self.communicationManager.get_communication_mutex().acquire()
         mux.agreeVector = [False]*self.communicationManager.processCount      # agree vector init
         for i in range(0, self.communicationManager.processCount):
             mux.agreeVector[i] = (i == self.communicationManager.processId)     # set every entry to false except requesting process
-        self.communicationManager.get_communication_mutex().release()
+        #self.communicationManager.get_communication_mutex().release()
         reqmes = Message()
         reqmes.type = "REQUEST"
         reqmes.referenceId = mux.id
@@ -124,8 +124,7 @@ class Monitor:
             mux.agreeVector[i] = (i == self.communicationManager.processId)     # set every entry to false except requesting process
         self.communicationManager.get_communication_mutex().release()
         mux.operationMutex.release()
-        self.log("INFO", "("+str(mux.id)+") leaving CS")
-        mux.localMutex.release()
+        self.log("INFO", "("+str(mux.id)+") unlocked and leaving CS")
 
     def wait(self, cv, mux):
         cv.conditionVariable.acquire()
@@ -134,7 +133,7 @@ class Monitor:
         retmes.referenceId = cv.id
         retmes.type = "WAIT"
         self.communicationManager.send_broadcast(retmes)
-        self.log("INFO", "("+str(cv.id)+")"+"Waiting...")
+        self.log("INFO", "("+str(cv.id)+")"+" waiting...")
         while cv.waiting:
             self.unlock(mux)
             cv.conditionVariable.wait()
@@ -148,6 +147,7 @@ class Monitor:
         self.communicationManager.send_broadcast(retmes)
 
     def signal_all(self, cv):
+        self.log("INFO", "("+str(cv.id)+") signaling to all")
         cv.conditionVariable.acquire()
         sigmes = Message()
         sigmes.referenceId = cv.id
@@ -158,6 +158,7 @@ class Monitor:
         cv.conditionVariable.release()
 
     def signal(self, cv):
+        self.log("INFO", "("+str(cv.id)+") signaling")
         cv.conditionVariable.acquire()
         sigmes = Message()
         sigmes.referenceId = cv.id
@@ -169,7 +170,7 @@ class Monitor:
 
     def communication_loop(self):
         while True:
-            self.communicationManager.wait_for_message()
+            #self.communicationManager.wait_for_message()
             msg = self.communicationManager.recv_message()
             if msg is None:
                 break
@@ -263,7 +264,7 @@ class Monitor:
                 cv.conditionVariable.acquire()
                 cv.waiting = False
                 cv.conditionVariable.notify()
-                cv.condidtionVariable.release()
+                cv.conditionVariable.release()
             elif msg.type == "QUIT":            # process will no longer communicate
                 self.quitMessages += 1
                 if self.quitMessages == self.communicationManager.processCount:

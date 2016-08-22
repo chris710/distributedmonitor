@@ -17,23 +17,21 @@ class Mutex:
         self.agreeVector = None   # list of received AGREEs (boolean)
         self.heldUpRequests = []    # AGREEs to be sent after unlock
         self.operationMutex = Lock()    # local mutex for blocking communication loop
-        self.localMutex = Lock()        # local mutex for thread safe behavior
+        #self.localMutex = Lock()        # local mutex for thread safe behavior
         self.previousReturn = None  # most recent RETURN msg
-        self.keepAlive = False      # no one is requesting
+        self.keepAlive = False      # no one is requesting, so after CS bc RETURN rather than AGREE
         self.criticalSectionCondition = Condition()     # for waiting till all AGREEs are collected
 
-        mutexListMutex.acquire()
-        existingMutexes[self.id] = self
-        mutexListMutex.release()
+        with mutexListMutex:
+            existingMutexes[self.id] = self
 
     @staticmethod
     def get_mutex(idn):
-        mutexListMutex.acquire()
-        for key, mutex in existingMutexes.items():
-            if key == idn:
-                mutexListMutex.release()
-                return mutex
-        mutexListMutex.release()
+        with mutexListMutex:
+            for key, mutex in existingMutexes.items():
+                if key == idn:
+                    #mutexListMutex.release()
+                    return mutex
         return None
 
     def get_data(self):
@@ -58,11 +56,10 @@ class Mutex:
         self.previousReturn = m
 
     def get_mutexes(self):
-        mutexListMutex.acquire()
-        listOfMutexes = []
-        for key, mutex in existingMutexes.items():
-            listOfMutexes.append(mutex)
-        mutexListMutex.release()
+        with mutexListMutex:
+            listOfMutexes = []
+            for key, mutex in existingMutexes.items():
+                listOfMutexes.append(mutex)
         return listOfMutexes
 
     def agree_vector_true(self):

@@ -14,23 +14,21 @@ class ConditionVariable:
         self.waitingProcesses = []          # list of processes
         self.conditionVariable = Condition()
 
-        conditionListMutex.acquire()
-        existingConditionVariables[self.id] = self
-        conditionListMutex.release()
+        with conditionListMutex:
+            existingConditionVariables[self.id] = self
 
     @staticmethod
     def get_condition_variable(idn):
-        conditionListMutex.acquire()
-        for key, var in existingConditionVariables.items():
-            if key == idn:
-                conditionListMutex.release()
-                return var
-        conditionListMutex.release()
+        with conditionListMutex:
+            for key, var in existingConditionVariables.items():
+                if key == idn:
+                    #conditionListMutex.release()
+                    return var
         return None
 
     def get_condition_variables(self):
-        conditionListMutex.acquire()
-        listOfCV = []
-        for key, var in existingConditionVariables.items():
-            listOfCV.append(var)
-        return listOfCV
+        with conditionListMutex:
+            listOfCV = []
+            for key, var in existingConditionVariables.items():
+                listOfCV.append(var)
+            return listOfCV
